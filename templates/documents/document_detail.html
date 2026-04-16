@@ -1,0 +1,107 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block title %}{{ document.title }}{% endblock %}
+
+{% block content %}
+<div class="col-md-12">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{% url 'documents:document_list' %}">Главная</a></li>
+            <li class="breadcrumb-item active">{{ document.title }}</li>
+        </ol>
+    </nav>
+    
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2>{{ document.title }}</h2>
+        </div>
+        <div class="card-body">
+            <!-- Основная информация -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <p><strong>📅 Дата создания:</strong> {{ document.created_at|default:"Не указана" }}</p>
+                    <p><strong>🎯 Событие:</strong> {{ document.event_context|default:"Не указано" }}</p>
+                    <p><strong>📍 Место создания:</strong> {{ document.place_created|default:"Не указано" }}</p>
+                    <p><strong>📚 Жанр:</strong> {{ document.get_genre_display|default:"Не указан" }}</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>🌐 Язык оригинала:</strong> {{ document.get_original_language_display|default:"Не указан" }}</p>
+                    <p><strong>🏷️ Дискурсивный тип:</strong> {{ document.get_discourse_type_display|default:"Не указан" }}</p>
+                    <p><strong>📅 Загружено:</strong> {{ document.uploaded_at|date:"d.m.Y H:i" }}</p>
+                </div>
+            </div>
+            
+            <!-- Субъекты -->
+            {% if document.subjects %}
+            <div class="mb-3">
+                <h5>👥 Субъекты (участники, акторы):</h5>
+                <div class="border p-2 bg-light rounded">
+                    {{ document.subjects|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Ключевые темы -->
+            {% if document.key_themes %}
+            <div class="mb-3">
+                <h5>🏷️ Ключевые темы:</h5>
+                <div class="border p-2 bg-light rounded">
+                    {{ document.key_themes }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Переводы -->
+            <div class="mb-3">
+                <h5>🔄 Переводы:</h5>
+                <p>
+                    {% if document.has_translations %}
+                    ✅ Имеются переводы на: {{ document.translation_languages|default:"не указаны" }}
+                    {% else %}
+                    ❌ Переводы отсутствуют
+                    {% endif %}
+                </p>
+            </div>
+            
+            <!-- Связанные документы -->
+            {% if document.related_documents %}
+            <div class="mb-3">
+                <h5>🔗 Связанные документы:</h5>
+                <div class="border p-2 bg-light rounded">
+                    {{ document.related_documents|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Полный текст -->
+            {% if document.full_text %}
+            <div class="mb-4">
+                <h5>📄 Полный текст документа:</h5>
+                <div class="border p-3 bg-white" style="max-height: 500px; overflow-y: auto; white-space: pre-wrap;">
+                    {{ document.full_text|linebreaks }}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Оригинальный файл -->
+            {% if document.original_file %}
+            <div class="mb-3">
+                <h5>📎 Оригинальный документ:</h5>
+                <a href="{{ document.original_file.url }}" class="btn btn-success" target="_blank">
+                    📄 Скачать / Просмотреть оригинал
+                </a>
+                <small class="text-muted ms-2">({{ document.original_file.size|filesizeformat }})</small>
+            </div>
+            {% endif %}
+            
+            <hr>
+            <div class="btn-group">
+                <a href="{% url 'documents:document_update' document.pk %}" class="btn btn-warning">✏️ Редактировать</a>
+                <a href="{% url 'documents:document_delete' document.pk %}" class="btn btn-danger">🗑️ Удалить</a>
+                <a href="{% url 'documents:document_list' %}" class="btn btn-secondary">← Назад к списку</a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

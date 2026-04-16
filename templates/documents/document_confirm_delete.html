@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block title %}Удаление документа{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-6 offset-md-3">
+        <div class="card">
+            <div class="card-header bg-danger text-white">
+                <h3>⚠️ Подтверждение удаления</h3>
+            </div>
+            <div class="card-body">
+                <p>Вы действительно хотите удалить документ:</p>
+                <h4>"{{ object.title }}"</h4>
+                <p class="text-danger">Это действие необратимо!</p>
+                
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="btn-group">
+                        <button type="submit" class="btn btn-danger">Да, удалить</button>
+                        <a href="{% url 'documents:document_detail' object.pk %}" class="btn btn-secondary">Отмена</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

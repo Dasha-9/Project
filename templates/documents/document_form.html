@@ -1,0 +1,156 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if form.instance.pk %}Редактирование{% else %}Новый документ{% endif %}{% endblock %}
+
+{% block content %}
+<div class="col-md-12">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h2>{% if form.instance.pk %}✏️ Редактирование документа{% else %}➕ Добавление нового документа{% endif %}</h2>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <!-- Обязательные поля -->
+                <div class="alert alert-info">
+                    <strong>📌 Обязательные поля:</strong> только название документа
+                </div>
+                
+                <div class="row mb-4">
+                    <div class="col-md-12">
+                        <label for="{{ form.title.id_for_label }}" class="form-label fw-bold text-danger">
+                            {{ form.title.label }} *
+                        </label>
+                        {{ form.title }}
+                        {% if form.title.errors %}
+                        <div class="alert alert-danger mt-1">{{ form.title.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <hr>
+                <h4 class="mt-4 mb-3">📄 Основная информация</h4>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="{{ form.full_text.id_for_label }}" class="form-label">{{ form.full_text.label }}</label>
+                        {{ form.full_text }}
+                        <small class="text-muted">Можно оставить пустым, если загружен файл</small>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.created_at.id_for_label }}" class="form-label">{{ form.created_at.label }}</label>
+                        {{ form.created_at }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.place_created.id_for_label }}" class="form-label">{{ form.place_created.label }}</label>
+                        {{ form.place_created }}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label for="{{ form.event_context.id_for_label }}" class="form-label">{{ form.event_context.label }}</label>
+                        {{ form.event_context }}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="{{ form.genre.id_for_label }}" class="form-label">{{ form.genre.label }}</label>
+                        {{ form.genre }}
+                    </div>
+                </div>
+                
+                <hr>
+                <h4 class="mt-4 mb-3">🏷️ Тематика и содержание</h4>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="{{ form.subjects.id_for_label }}" class="form-label">{{ form.subjects.label }}</label>
+                        {{ form.subjects }}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="{{ form.key_themes.id_for_label }}" class="form-label">{{ form.key_themes.label }}</label>
+                        {{ form.key_themes }}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label for="{{ form.original_language.id_for_label }}" class="form-label">{{ form.original_language.label }}</label>
+                        {{ form.original_language }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.discourse_type.id_for_label }}" class="form-label">{{ form.discourse_type.label }}</label>
+                        {{ form.discourse_type }}
+                    </div>
+                    <div class="col-md-4">
+                        <label for="{{ form.has_translations.id_for_label }}" class="form-label">{{ form.has_translations.label }}</label>
+                        <div class="form-check mt-2">
+                            {{ form.has_translations }}
+                            <label class="form-check-label" for="{{ form.has_translations.id_for_label }}">Есть переводы</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="{{ form.translation_languages.id_for_label }}" class="form-label">{{ form.translation_languages.label }}</label>
+                        {{ form.translation_languages }}
+                    </div>
+                </div>
+                
+                <hr>
+                <h4 class="mt-4 mb-3">🔗 Связи и файлы</h4>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="{{ form.related_documents.id_for_label }}" class="form-label">{{ form.related_documents.label }}</label>
+                        {{ form.related_documents }}
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <label for="{{ form.original_file.id_for_label }}" class="form-label">{{ form.original_file.label }}</label>
+                        {{ form.original_file }}
+                        {% if form.instance.original_file %}
+                        <div class="mt-2">
+                            <small class="text-success">✓ Текущий файл: {{ form.instance.original_file.name }}</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="btn-group mt-3">
+                    <button type="submit" class="btn btn-success">💾 Сохранить</button>
+                    <a href="{% url 'documents:document_list' %}" class="btn btn-secondary">❌ Отмена</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Показывать/скрывать поле "языки переводов" в зависимости от чекбокса
+    const hasTranslationsCheckbox = document.getElementById('{{ form.has_translations.id_for_label }}');
+    const translationLanguagesField = document.getElementById('{{ form.translation_languages.id_for_label }}').closest('.row');
+    
+    function toggleTranslationField() {
+        if (hasTranslationsCheckbox.checked) {
+            translationLanguagesField.style.display = 'flex';
+        } else {
+            translationLanguagesField.style.display = 'none';
+        }
+    }
+    
+    if (hasTranslationsCheckbox) {
+        toggleTranslationField();
+        hasTranslationsCheckbox.addEventListener('change', toggleTranslationField);
+    }
+</script>
+{% endblock %}

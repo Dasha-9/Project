@@ -6,48 +6,124 @@
     <title>{% block title %}Архив документов{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        .sidebar {
-            background-color: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
+        body { background: #f0f2f7; font-family: 'Segoe UI', sans-serif; }
+        .official-navbar {
+            background: #111d35;
+            border-bottom: 3px solid #c5973a;
+            padding: 0;
         }
-        .filter-group {
-            margin-bottom: 20px;
+        .navbar-top-bar {
+            background: #0d1628;
+            padding: 4px 0;
+            font-size: 0.72rem;
+            color: #6677aa;
+            letter-spacing: 0.5px;
         }
-        .filter-group label {
-            font-weight: bold;
-            margin-bottom: 8px;
+        .navbar-main { padding: 12px 0; }
+        .navbar-brand-text {
+            color: #fff !important;
+            font-size: 1.1rem;
+            font-weight: 700;
+            letter-spacing: 0.3px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
-        .card-hover:hover {
-            transform: translateY(-2px);
-            transition: all 0.3s ease;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        .navbar-brand-icon {
+            background: #c5973a;
+            width: 36px;
+            height: 36px;
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        .nav-link-official {
+            color: #a8c0dc !important;
+            font-size: 0.85rem;
+            padding: 8px 14px !important;
+            border-radius: 2px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .nav-link-official:hover { color: #fff !important; background: rgba(255,255,255,0.08); }
+        .nav-link-official.active { color: #c5973a !important; }
+        .nav-user { color: #c5973a !important; font-size: 0.85rem; padding: 8px 14px !important; font-weight: 600; }
+        .nav-add-btn {
+            background: #c5973a;
+            color: #fff !important;
+            font-size: 0.82rem;
+            padding: 7px 16px !important;
+            border-radius: 2px;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+        .nav-add-btn:hover { background: #b5872a; color: #fff !important; }
+        .main-wrapper { padding: 0; }
+        .container { max-width: 1200px; }
+        .card-hover:hover { transform: translateY(-2px); transition: all 0.3s ease; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        .official-footer {
+            background: #111d35;
+            border-top: 3px solid #c5973a;
+            color: #6677aa;
+            font-size: 0.78rem;
+            padding: 20px 0;
+            margin-top: 48px;
+            text-align: center;
         }
     </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
-        <div class="container">
-            <a class="navbar-brand" href="{% url 'documents:document_list' %}">📚 Архив документов</a>
-            <div class="navbar-nav ms-auto">
+
+<nav class="official-navbar navbar navbar-expand-lg">
+    <div class="container">
+        <div class="navbar-top-bar w-100 d-none d-lg-block" style="position:absolute;top:0;left:0;right:0;z-index:0;"></div>
+        <a class="navbar-brand-text" href="/">
+            <div class="navbar-brand-icon">📚</div>
+            <div>
+                <div style="font-size:1rem;font-weight:700;">Архив документов</div>
+                <div style="font-size:0.65rem;color:#6677aa;letter-spacing:1px;font-weight:400;">МЕЖДУНАРОДНЫЕ ПОЛИТИЧЕСКИЕ ДОКУМЕНТЫ</div>
+            </div>
+        </a>
+
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu" style="border-color:#3a4a6b;">
+            <span style="color:#fff;">☰</span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navMenu">
+            <div class="navbar-nav ms-auto align-items-center gap-1">
+                <a class="nav-link-official" href="/">Главная</a>
+                <a class="nav-link-official" href="{% url 'documents:document_list' %}">Документы</a>
+                <a class="nav-link-official" href="{% url 'documents:convert' %}">🔄 Конвертер</a>
                 {% if user.is_authenticated %}
-                    <span class="nav-link text-light">👤 {{ user.username }}</span>
-                    <a class="nav-link" href="{% url 'documents:document_create' %}">➕ Добавить документ</a>
-                    <a class="nav-link" href="/admin/">🔧 Админка</a>
-                    <a class="nav-link" href="{% url 'logout' %}">🚪 Выйти</a>
+                    <a class="nav-link-official nav-add-btn ms-2" href="{% url 'documents:document_create' %}">➕ Добавить</a>
+                    <a class="nav-link-official" href="/admin/">Админка</a>
+                    <span class="nav-user">👤 {{ user.username }}</span>
+                    <a class="nav-link-official" href="{% url 'logout' %}">Выйти</a>
                 {% else %}
-                    <a class="nav-link" href="{% url 'login' %}">🔐 Войти</a>
+                    <a class="nav-link-official nav-add-btn ms-2" href="{% url 'login' %}">🔐 Войти</a>
                 {% endif %}
             </div>
         </div>
-    </nav>
-    
-    <div class="container">
-        <div class="row">
+    </div>
+</nav>
+
+<div class="main-wrapper">
+    <div class="container-fluid px-0">
+        <div class="row g-0">
             {% block content %}{% endblock %}
         </div>
     </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</div>
+
+<footer class="official-footer">
+    <div class="container">
+        Архив международных политических документов &nbsp;·&nbsp; Учебный проект
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

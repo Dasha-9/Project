@@ -1,156 +1,173 @@
 {% extends 'base.html' %}
 
-{% block title %}{% if form.instance.pk %}Редактирование{% else %}Новый документ{% endif %}{% endblock %}
+{% block title %}{% if form.instance.pk %}Редактирование документа{% else %}Добавление документа{% endif %}{% endblock %}
 
 {% block content %}
-<div class="col-md-12">
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h2>{% if form.instance.pk %}✏️ Редактирование документа{% else %}➕ Добавление нового документа{% endif %}</h2>
-        </div>
-        <div class="card-body">
-            <form method="post" enctype="multipart/form-data">
-                {% csrf_token %}
-                
-                <!-- Обязательные поля -->
-                <div class="alert alert-info">
-                    <strong>📌 Обязательные поля:</strong> только название документа
-                </div>
-                
-                <div class="row mb-4">
-                    <div class="col-md-12">
-                        <label for="{{ form.title.id_for_label }}" class="form-label fw-bold text-danger">
-                            {{ form.title.label }} *
-                        </label>
-                        {{ form.title }}
-                        {% if form.title.errors %}
-                        <div class="alert alert-danger mt-1">{{ form.title.errors }}</div>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <hr>
-                <h4 class="mt-4 mb-3">📄 Основная информация</h4>
-                
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label for="{{ form.full_text.id_for_label }}" class="form-label">{{ form.full_text.label }}</label>
-                        {{ form.full_text }}
-                        <small class="text-muted">Можно оставить пустым, если загружен файл</small>
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="{{ form.created_at.id_for_label }}" class="form-label">{{ form.created_at.label }}</label>
-                        {{ form.created_at }}
-                    </div>
-                    <div class="col-md-6">
-                        <label for="{{ form.place_created.id_for_label }}" class="form-label">{{ form.place_created.label }}</label>
-                        {{ form.place_created }}
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label for="{{ form.event_context.id_for_label }}" class="form-label">{{ form.event_context.label }}</label>
-                        {{ form.event_context }}
-                    </div>
-                    <div class="col-md-6">
-                        <label for="{{ form.genre.id_for_label }}" class="form-label">{{ form.genre.label }}</label>
-                        {{ form.genre }}
-                    </div>
-                </div>
-                
-                <hr>
-                <h4 class="mt-4 mb-3">🏷️ Тематика и содержание</h4>
-                
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label for="{{ form.subjects.id_for_label }}" class="form-label">{{ form.subjects.label }}</label>
-                        {{ form.subjects }}
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label for="{{ form.key_themes.id_for_label }}" class="form-label">{{ form.key_themes.label }}</label>
-                        {{ form.key_themes }}
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-4">
-                        <label for="{{ form.original_language.id_for_label }}" class="form-label">{{ form.original_language.label }}</label>
-                        {{ form.original_language }}
-                    </div>
-                    <div class="col-md-4">
-                        <label for="{{ form.discourse_type.id_for_label }}" class="form-label">{{ form.discourse_type.label }}</label>
-                        {{ form.discourse_type }}
-                    </div>
-                    <div class="col-md-4">
-                        <label for="{{ form.has_translations.id_for_label }}" class="form-label">{{ form.has_translations.label }}</label>
-                        <div class="form-check mt-2">
-                            {{ form.has_translations }}
-                            <label class="form-check-label" for="{{ form.has_translations.id_for_label }}">Есть переводы</label>
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label for="{{ form.translation_languages.id_for_label }}" class="form-label">{{ form.translation_languages.label }}</label>
-                        {{ form.translation_languages }}
-                    </div>
-                </div>
-                
-                <hr>
-                <h4 class="mt-4 mb-3">🔗 Связи и файлы</h4>
-                
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label for="{{ form.related_documents.id_for_label }}" class="form-label">{{ form.related_documents.label }}</label>
-                        {{ form.related_documents }}
-                    </div>
-                </div>
-                
-                <div class="row mb-3">
-                    <div class="col-md-12">
-                        <label for="{{ form.original_file.id_for_label }}" class="form-label">{{ form.original_file.label }}</label>
-                        {{ form.original_file }}
-                        {% if form.instance.original_file %}
-                        <div class="mt-2">
-                            <small class="text-success">✓ Текущий файл: {{ form.instance.original_file.name }}</small>
-                        </div>
-                        {% endif %}
-                    </div>
-                </div>
-                
-                <div class="btn-group mt-3">
-                    <button type="submit" class="btn btn-success">💾 Сохранить</button>
-                    <a href="{% url 'documents:document_list' %}" class="btn btn-secondary">❌ Отмена</a>
-                </div>
-            </form>
+<div class="col-12">
+
+<style>
+.form-page-header {
+    background: linear-gradient(135deg, #1a2744 0%, #2c3e6b 100%);
+    padding: 32px 40px;
+    margin: -16px -12px 32px;
+    border-bottom: 4px solid #c5973a;
+}
+.form-page-title { color: #fff; font-size: 1.6rem; font-weight: 700; margin: 0 0 6px; }
+.form-page-subtitle { color: #a8c0dc; font-size: 0.9rem; margin: 0; }
+.form-section { background: #fff; border: 1px solid #dde3ec; border-top: 3px solid #2c3e6b; border-radius: 3px; margin-bottom: 24px; overflow: hidden; }
+.form-section-header { background: #f4f6fb; border-bottom: 1px solid #dde3ec; padding: 14px 24px; display: flex; align-items: center; gap: 10px; }
+.form-section-title { font-size: 0.95rem; font-weight: 700; color: #1a2744; margin: 0; text-transform: uppercase; letter-spacing: 0.5px; }
+.form-section-body { padding: 24px; }
+.field-label { font-size: 0.82rem; font-weight: 600; color: #3a4a6b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px; display: block; }
+.required-star { color: #c5973a; margin-left: 3px; }
+.field-hint { font-size: 0.78rem; color: #8899bb; margin-top: 4px; }
+.form-control, .form-select { border: 1px solid #ccd3e0; border-radius: 2px; font-size: 0.9rem; padding: 9px 12px; color: #1a2744; }
+.form-control:focus, .form-select:focus { border-color: #2c3e6b; box-shadow: 0 0 0 3px rgba(44,62,107,0.1); }
+.required-section { border-top-color: #c5973a !important; }
+.field-error { color: #c0392b; font-size: 0.8rem; margin-top: 4px; }
+.file-upload-area { border: 2px dashed #ccd3e0; border-radius: 3px; padding: 24px; text-align: center; background: #f8f9fc; }
+.file-upload-icon { font-size: 2rem; margin-bottom: 8px; }
+.file-upload-text { font-size: 0.85rem; color: #6677aa; }
+.current-file-badge { display: inline-flex; align-items: center; gap: 8px; background: #eef7ee; border: 1px solid #b8ddb8; border-radius: 2px; padding: 6px 12px; font-size: 0.82rem; color: #2d6a2d; margin-top: 10px; }
+.form-actions { background: #f4f6fb; border: 1px solid #dde3ec; border-radius: 3px; padding: 20px 24px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.btn-save { background: #2c3e6b; color: #fff; border: none; padding: 11px 32px; font-size: 0.9rem; font-weight: 600; border-radius: 2px; cursor: pointer; transition: background 0.2s; }
+.btn-save:hover { background: #c5973a; }
+.btn-cancel { background: transparent; color: #6677aa; border: 1px solid #ccd3e0; padding: 11px 24px; font-size: 0.9rem; font-weight: 500; border-radius: 2px; text-decoration: none; transition: all 0.2s; }
+.btn-cancel:hover { border-color: #2c3e6b; color: #2c3e6b; }
+.checkbox-wrapper { display: flex; align-items: center; gap: 10px; padding: 10px 0; }
+.form-check-input { width: 18px; height: 18px; accent-color: #2c3e6b; }
+</style>
+
+<div class="form-page-header">
+    <h1 class="form-page-title">
+        {% if form.instance.pk %}✏️ Редактирование документа{% else %}➕ Добавление нового документа{% endif %}
+    </h1>
+    <p class="form-page-subtitle">
+        {% if form.instance.pk %}Внесите изменения и сохраните документ{% else %}Заполните форму для добавления документа в архив. Обязательно только название.{% endif %}
+    </p>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+{% csrf_token %}
+
+<div class="form-section required-section">
+    <div class="form-section-header"><span>📌</span><h3 class="form-section-title">Обязательные поля</h3></div>
+    <div class="form-section-body">
+        <div class="mb-3">
+            <label class="field-label">{{ form.title.label }}<span class="required-star">*</span></label>
+            {{ form.title }}
+            {% if form.title.errors %}<div class="field-error">{{ form.title.errors }}</div>{% endif %}
         </div>
     </div>
 </div>
 
+<div class="form-section">
+    <div class="form-section-header"><span>📄</span><h3 class="form-section-title">Основная информация</h3></div>
+    <div class="form-section-body">
+        <div class="mb-4">
+            <label class="field-label">{{ form.full_text.label }}</label>
+            {{ form.full_text }}
+            <div class="field-hint">Можно оставить пустым, если загружен файл документа</div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="field-label">{{ form.created_at.label }}</label>
+                {{ form.created_at }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="field-label">{{ form.place_created.label }}</label>
+                {{ form.place_created }}
+                <div class="field-hint">Город, страна</div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="field-label">{{ form.genre.label }}</label>
+                {{ form.genre }}
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="field-label">{{ form.event_context.label }}</label>
+            {{ form.event_context }}
+            <div class="field-hint">Например: Саммит БРИКС 2023</div>
+        </div>
+    </div>
+</div>
+
+<div class="form-section">
+    <div class="form-section-header"><span>🏷️</span><h3 class="form-section-title">Тематика и содержание</h3></div>
+    <div class="form-section-body">
+        <div class="mb-3">
+            <label class="field-label">{{ form.subjects.label }}</label>
+            {{ form.subjects }}
+            <div class="field-hint">Список государств, лидеров, институтов</div>
+        </div>
+        <div class="mb-3">
+            <label class="field-label">{{ form.key_themes.label }}</label>
+            {{ form.key_themes }}
+            <div class="field-hint">Теги через запятую: многополярность, регионализация...</div>
+        </div>
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <label class="field-label">{{ form.original_language.label }}</label>
+                {{ form.original_language }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="field-label">{{ form.discourse_type.label }}</label>
+                {{ form.discourse_type }}
+            </div>
+            <div class="col-md-4 mb-3">
+                <label class="field-label">Переводы</label>
+                <div class="checkbox-wrapper">
+                    {{ form.has_translations }}
+                    <label for="{{ form.has_translations.id_for_label }}" style="font-size:0.9rem;color:#3a4a6b;cursor:pointer;">{{ form.has_translations.label }}</label>
+                </div>
+            </div>
+        </div>
+        <div class="mb-3" id="translation-row">
+            <label class="field-label">{{ form.translation_languages.label }}</label>
+            {{ form.translation_languages }}
+            <div class="field-hint">Например: русский, английский, китайский</div>
+        </div>
+    </div>
+</div>
+
+<div class="form-section">
+    <div class="form-section-header"><span>🔗</span><h3 class="form-section-title">Связи и файлы</h3></div>
+    <div class="form-section-body">
+        <div class="mb-4">
+            <label class="field-label">{{ form.related_documents.label }}</label>
+            {{ form.related_documents }}
+            <div class="field-hint">Ссылки на предшествующие или последующие документы</div>
+        </div>
+        <div class="mb-3">
+            <label class="field-label">{{ form.original_file.label }}</label>
+            {% if form.instance.original_file %}
+            <div class="current-file-badge">📎 {{ form.instance.original_file.name|truncatechars:50 }}</div>
+            <div class="field-hint mt-1">Загрузите новый файл, чтобы заменить текущий</div>
+            {% endif %}
+            <div class="file-upload-area mt-2">
+                <div class="file-upload-icon">📁</div>
+                <div class="file-upload-text">PDF, DOC, DOCX, TXT</div>
+                <div class="mt-2">{{ form.original_file }}</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="form-actions">
+    <button type="submit" class="btn-save">💾 {% if form.instance.pk %}Сохранить изменения{% else %}Добавить документ{% endif %}</button>
+    <a href="{% url 'documents:document_list' %}" class="btn-cancel">Отмена</a>
+    {% if form.instance.pk %}
+    <a href="{% url 'documents:document_detail' form.instance.pk %}" class="btn-cancel ms-auto">👁️ Просмотр</a>
+    {% endif %}
+</div>
+
+</form>
+</div>
+
 <script>
-    // Показывать/скрывать поле "языки переводов" в зависимости от чекбокса
-    const hasTranslationsCheckbox = document.getElementById('{{ form.has_translations.id_for_label }}');
-    const translationLanguagesField = document.getElementById('{{ form.translation_languages.id_for_label }}').closest('.row');
-    
-    function toggleTranslationField() {
-        if (hasTranslationsCheckbox.checked) {
-            translationLanguagesField.style.display = 'flex';
-        } else {
-            translationLanguagesField.style.display = 'none';
-        }
-    }
-    
-    if (hasTranslationsCheckbox) {
-        toggleTranslationField();
-        hasTranslationsCheckbox.addEventListener('change', toggleTranslationField);
-    }
+const checkbox = document.getElementById('{{ form.has_translations.id_for_label }}');
+const translationRow = document.getElementById('translation-row');
+function toggleTranslation() { translationRow.style.display = checkbox.checked ? 'block' : 'none'; }
+if (checkbox) { toggleTranslation(); checkbox.addEventListener('change', toggleTranslation); }
 </script>
 {% endblock %}

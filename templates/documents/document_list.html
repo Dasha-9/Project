@@ -1,138 +1,156 @@
 {% extends 'base.html' %}
 
-{% block title %}Поиск документов{% endblock %}
+{% block title %}Документы — Архив{% endblock %}
 
 {% block content %}
-<!-- Боковая панель фильтров -->
-<div class="col-md-3">
-    <div class="sidebar">
-        <h4>🔍 Фильтры</h4>
-        
-        <form method="get" action="{% url 'documents:document_list' %}">
-            <div class="filter-group">
-                <label for="q">Поиск по тексту:</label>
-                <input type="text" name="q" id="q" class="form-control" 
-                       placeholder="Введите текст..." value="{{ current_filters.q }}">
-            </div>
-            
-            <div class="filter-group">
-                <label for="genre">Жанр документа:</label>
-                <select name="genre" id="genre" class="form-select">
-                    <option value="">Все жанры</option>
-                    {% for genre_value, genre_name in genres %}
-                    <option value="{{ genre_value }}" {% if current_filters.genre == genre_value %}selected{% endif %}>
-                        {{ genre_name }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="language">Язык оригинала:</label>
-                <select name="language" id="language" class="form-select">
-                    <option value="">Все языки</option>
-                    {% for lang in languages %}
-                    <option value="{{ lang }}" {% if current_filters.language == lang %}selected{% endif %}>
-                        {{ lang }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <div class="filter-group">
-                <label for="year">Год создания:</label>
-                <select name="year" id="year" class="form-select">
-                    <option value="">Все годы</option>
-                    {% for year in years %}
-                    <option value="{{ year }}" {% if current_filters.year|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>
-                        {{ year }}
-                    </option>
-                    {% endfor %}
-                </select>
-            </div>
-            
-            <button type="submit" class="btn btn-primary w-100 mb-2">Применить фильтры</button>
-            <a href="{% url 'documents:document_list' %}" class="btn btn-secondary w-100">Сбросить все</a>
-        </form>
-    </div>
+<div class="col-12">
+<style>
+.list-page-header { background: linear-gradient(135deg, #1a2744 0%, #2c3e6b 100%); padding: 28px 40px; border-bottom: 4px solid #c5973a; }
+.list-page-title { color: #fff; font-size: 1.5rem; font-weight: 700; margin: 0 0 4px; }
+.list-page-sub { color: #a8c0dc; font-size: 0.85rem; margin: 0; }
+.list-body { display: flex; gap: 24px; padding: 28px 40px; align-items: flex-start; }
+.sidebar { width: 260px; flex-shrink: 0; }
+.sidebar-card { background: #fff; border: 1px solid #dde3ec; border-top: 3px solid #2c3e6b; border-radius: 3px; padding: 20px; margin-bottom: 16px; }
+.sidebar-title { font-size: 0.78rem; font-weight: 700; color: #3a4a6b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+.filter-label { font-size: 0.78rem; font-weight: 600; color: #3a4a6b; text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 5px; display: block; }
+.form-control, .form-select { border: 1px solid #ccd3e0; border-radius: 2px; font-size: 0.85rem; padding: 7px 10px; color: #1a2744; }
+.form-control:focus, .form-select:focus { border-color: #2c3e6b; box-shadow: 0 0 0 2px rgba(44,62,107,0.1); }
+.btn-filter { background: #2c3e6b; color: #fff; border: none; padding: 9px 16px; font-size: 0.85rem; font-weight: 600; border-radius: 2px; width: 100%; cursor: pointer; transition: background 0.2s; }
+.btn-filter:hover { background: #c5973a; }
+.btn-reset { background: transparent; color: #6677aa; border: 1px solid #ccd3e0; padding: 8px 16px; font-size: 0.82rem; border-radius: 2px; width: 100%; text-align: center; text-decoration: none; display: block; margin-top: 8px; }
+.btn-reset:hover { border-color: #2c3e6b; color: #2c3e6b; }
+.results-area { flex: 1; min-width: 0; }
+.results-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+.results-count { font-size: 0.85rem; color: #6677aa; }
+.doc-item { background: #fff; border: 1px solid #dde3ec; border-left: 4px solid #2c3e6b; border-radius: 2px; padding: 20px 24px; margin-bottom: 12px; transition: box-shadow 0.2s, border-left-color 0.2s; }
+.doc-item:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.08); border-left-color: #c5973a; }
+.doc-item-title a { color: #1a2744; text-decoration: none; font-size: 1rem; font-weight: 700; line-height: 1.4; }
+.doc-item-title a:hover { color: #c5973a; }
+.doc-meta-row { display: flex; flex-wrap: wrap; gap: 12px; margin: 8px 0; }
+.doc-meta-tag { font-size: 0.75rem; color: #6677aa; display: flex; align-items: center; gap: 4px; }
+.doc-genre-pill { font-size: 0.7rem; background: #eef2f9; color: #2c3e6b; padding: 2px 10px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.3px; }
+.doc-excerpt { font-size: 0.85rem; color: #6677aa; line-height: 1.5; margin: 8px 0 12px; }
+.doc-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn-read { font-size: 0.78rem; background: #2c3e6b; color: #fff; padding: 5px 14px; border-radius: 2px; text-decoration: none; font-weight: 500; }
+.btn-read:hover { background: #c5973a; color: #fff; }
+.btn-edit { font-size: 0.78rem; background: transparent; color: #6677aa; border: 1px solid #ccd3e0; padding: 5px 14px; border-radius: 2px; text-decoration: none; }
+.btn-edit:hover { border-color: #2c3e6b; color: #2c3e6b; }
+.btn-delete { font-size: 0.78rem; background: transparent; color: #c0392b; border: 1px solid #f0c0bb; padding: 5px 14px; border-radius: 2px; text-decoration: none; }
+.btn-delete:hover { background: #c0392b; color: #fff; }
+.empty-state { text-align: center; padding: 64px 32px; background: #fff; border: 1px dashed #ccd3e0; border-radius: 3px; }
+.empty-icon { font-size: 3rem; margin-bottom: 12px; }
+.pagination-bar { display: flex; justify-content: center; gap: 6px; margin-top: 24px; }
+.page-btn { font-size: 0.82rem; padding: 6px 14px; border: 1px solid #ccd3e0; border-radius: 2px; text-decoration: none; color: #3a4a6b; background: #fff; }
+.page-btn:hover { border-color: #2c3e6b; color: #2c3e6b; }
+.page-btn.active { background: #2c3e6b; color: #fff; border-color: #2c3e6b; }
+</style>
+
+<div class="list-page-header">
+    <h1 class="list-page-title">📄 Документы архива</h1>
+    <p class="list-page-sub">Поиск и фильтрация по всем документам</p>
 </div>
 
-<!-- Основной контент - список документов -->
-<div class="col-md-9">
-    <h2>📄 Документы</h2>
-    
-    {% if documents %}
-        <p class="text-muted">Найдено документов: {{ page_obj.paginator.count }}</p>
-        
-        {% for doc in documents %}
-        <div class="card mb-3 card-hover">
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-md-12">
-                        <h4 class="card-title">
-                            <a href="{% url 'documents:document_detail' doc.pk %}" class="text-decoration-none">
-                                {{ doc.title }}
-                            </a>
-                        </h4>
-                        <p class="card-text text-muted">
-                            📅 {{ doc.created_at|default:"Дата не указана" }} | 
-                            📚 {{ doc.get_genre_display|default:"Жанр не указан" }} | 
-                            🌐 {{ doc.original_language }}
-                            {% if doc.place_created %} | 📍 {{ doc.place_created }}{% endif %}
-                        </p>
-                        <p class="card-text">{{ doc.full_text|truncatewords:50 }}</p>
-                        <div class="btn-group">
-                            {% if doc.original_file %}
-                                <a href="{{ doc.original_file.url }}" class="btn btn-sm btn-success" target="_blank">📄 Читать оригинал</a>
-                            {% endif %}
-                            <a href="{% url 'documents:document_detail' doc.pk %}" class="btn btn-sm btn-primary">📖 Читать текст</a>
-                            
-                            <!-- Кнопки редактирования и удаления видны только авторизованным -->
-                            {% if user.is_authenticated %}
-                                <a href="{% url 'documents:document_update' doc.pk %}" class="btn btn-sm btn-warning">✏️ Редактировать</a>
-                                <a href="{% url 'documents:document_delete' doc.pk %}" class="btn btn-sm btn-danger">🗑️ Удалить</a>
-                            {% endif %}
-                        </div>
-                    </div>
+<div class="list-body">
+
+    <!-- SIDEBAR FILTERS -->
+    <div class="sidebar">
+        <div class="sidebar-card">
+            <div class="sidebar-title">🔍 Фильтры</div>
+            <form method="get" action="{% url 'documents:document_list' %}">
+                <div class="mb-3">
+                    <label class="filter-label">Поиск</label>
+                    <input type="text" name="q" class="form-control" placeholder="Введите текст..." value="{{ current_filters.q }}">
                 </div>
+                <div class="mb-3">
+                    <label class="filter-label">Жанр</label>
+                    <select name="genre" class="form-select">
+                        <option value="">Все жанры</option>
+                        {% for genre_value, genre_name in genres %}
+                        <option value="{{ genre_value }}" {% if current_filters.genre == genre_value %}selected{% endif %}>{{ genre_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="filter-label">Язык</label>
+                    <select name="language" class="form-select">
+                        <option value="">Все языки</option>
+                        {% for lang_value, lang_name in languages %}
+                        <option value="{{ lang_value }}" {% if current_filters.language == lang_value %}selected{% endif %}>{{ lang_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="filter-label">Год</label>
+                    <select name="year" class="form-select">
+                        <option value="">Все годы</option>
+                        {% for year in years %}
+                        <option value="{{ year }}" {% if current_filters.year|stringformat:"s" == year|stringformat:"s" %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-filter">Применить</button>
+                <a href="{% url 'documents:document_list' %}" class="btn-reset">Сбросить</a>
+            </form>
+        </div>
+    </div>
+
+    <!-- RESULTS -->
+    <div class="results-area">
+        <div class="results-bar">
+            <span class="results-count">Найдено: {{ page_obj.paginator.count }} документов</span>
+            {% if user.is_authenticated %}
+            <a href="{% url 'documents:document_create' %}" class="btn-read">➕ Добавить</a>
+            {% endif %}
+        </div>
+
+        {% for doc in documents %}
+        <div class="doc-item">
+            <div class="doc-item-title">
+                <a href="{% url 'documents:document_detail' doc.pk %}">{{ doc.title }}</a>
+            </div>
+            <div class="doc-meta-row">
+                {% if doc.genre %}<span class="doc-genre-pill">{{ doc.get_genre_display }}</span>{% endif %}
+                {% if doc.created_at %}<span class="doc-meta-tag">📅 {{ doc.created_at }}</span>{% endif %}
+                {% if doc.place_created %}<span class="doc-meta-tag">📍 {{ doc.place_created }}</span>{% endif %}
+                {% if doc.original_language %}<span class="doc-meta-tag">🌐 {{ doc.get_original_language_display }}</span>{% endif %}
+            </div>
+            {% if doc.full_text %}
+            <p class="doc-excerpt">{{ doc.full_text|truncatewords:30 }}</p>
+            {% endif %}
+            <div class="doc-actions">
+                <a href="{% url 'documents:document_detail' doc.pk %}" class="btn-read">📖 Читать</a>
+                {% if doc.original_file %}<a href="{{ doc.original_file.url }}" class="btn-edit" target="_blank">📎 Файл</a>{% endif %}
+                {% if user.is_authenticated %}
+                <a href="{% url 'documents:document_update' doc.pk %}" class="btn-edit">✏️ Изменить</a>
+                <a href="{% url 'documents:document_delete' doc.pk %}" class="btn-delete">🗑️ Удалить</a>
+                {% endif %}
             </div>
         </div>
-        {% endfor %}
-        
-        <!-- Пагинация -->
-        {% if is_paginated %}
-        <nav aria-label="Page navigation">
-            <ul class="pagination justify-content-center">
-                {% if page_obj.has_previous %}
-                <li class="page-item">
-                    <a class="page-link" href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">&laquo; Первая</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Предыдущая</a>
-                </li>
-                {% endif %}
-                
-                <li class="page-item active">
-                    <span class="page-link">Страница {{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
-                </li>
-                
-                {% if page_obj.has_next %}
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Следующая</a>
-                </li>
-                <li class="page-item">
-                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Последняя &raquo;</a>
-                </li>
-                {% endif %}
-            </ul>
-        </nav>
-        {% endif %}
-        
-    {% else %}
-        <div class="alert alert-info">
-            <h4 class="alert-heading">Документов не найдено</h4>
-            <p>Попробуйте изменить параметры поиска или <a href="{% url 'documents:document_create' %}">добавьте первый документ</a>!</p>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <h4 style="color:#1a2744;">Документов не найдено</h4>
+            <p style="color:#6677aa;">Попробуйте изменить параметры поиска</p>
+            {% if user.is_authenticated %}
+            <a href="{% url 'documents:document_create' %}" class="btn-read mt-2" style="display:inline-block;">Добавить документ</a>
+            {% endif %}
         </div>
-    {% endif %}
+        {% endfor %}
+
+        {% if is_paginated %}
+        <div class="pagination-bar">
+            {% if page_obj.has_previous %}
+            <a class="page-btn" href="?page=1{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">&laquo;</a>
+            <a class="page-btn" href="?page={{ page_obj.previous_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">‹</a>
+            {% endif %}
+            <span class="page-btn active">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+            {% if page_obj.has_next %}
+            <a class="page-btn" href="?page={{ page_obj.next_page_number }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">›</a>
+            <a class="page-btn" href="?page={{ page_obj.paginator.num_pages }}{% for k,v in request.GET.items %}{% if k != 'page' %}&{{ k }}={{ v }}{% endif %}{% endfor %}">&raquo;</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
 </div>
 {% endblock %}

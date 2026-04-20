@@ -1,0 +1,299 @@
+{% extends 'base.html' %}
+
+{% block title %}Архив международных документов — Главная{% endblock %}
+
+{% block content %}
+<div class="col-12 p-0">
+
+<!-- HERO SECTION -->
+<div class="hero-section">
+    <div class="hero-overlay">
+        <div class="container py-5">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto text-center">
+                    <div class="mb-3">
+                        <span class="badge-official">АРХИВ</span>
+                    </div>
+                    <h1 class="hero-title">Архив международных<br>политических документов</h1>
+                    <p class="hero-subtitle">Систематизированная база деклараций, договоров, протоколов<br>и иных официальных документов международного значения</p>
+
+                    <!-- SEARCH BAR -->
+                    <form method="get" action="{% url 'documents:document_list' %}" class="mt-4">
+                        <div class="search-bar-wrapper">
+                            <input type="text" name="q" class="search-input" placeholder="Поиск по названию, тексту или месту создания...">
+                            <button type="submit" class="search-btn">🔍 Найти</button>
+                        </div>
+                        <div class="quick-filters mt-3">
+                            <a href="{% url 'documents:document_list' %}?genre=declaration" class="quick-tag">Декларации</a>
+                            <a href="{% url 'documents:document_list' %}?genre=treaty" class="quick-tag">Договоры</a>
+                            <a href="{% url 'documents:document_list' %}?genre=protocol" class="quick-tag">Протоколы</a>
+                            <a href="{% url 'documents:document_list' %}?genre=agreement" class="quick-tag">Соглашения</a>
+                            <a href="{% url 'documents:document_list' %}?genre=memorandum" class="quick-tag">Меморандумы</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- STATISTICS BAR -->
+<div class="stats-bar">
+    <div class="container">
+        <div class="row text-center">
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ total_documents }}</div>
+                    <div class="stat-label">Документов в архиве</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ total_genres }}</div>
+                    <div class="stat-label">Жанров документов</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ total_languages }}</div>
+                    <div class="stat-label">Языков оригиналов</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-item">
+                    <div class="stat-number">{{ docs_with_files }}</div>
+                    <div class="stat-label">Документов с файлами</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="container py-5">
+
+    <!-- RECENT DOCUMENTS -->
+    <div class="row mb-5">
+        <div class="col-12">
+            <div class="section-header">
+                <h2 class="section-title">📄 Последние поступления</h2>
+                <a href="{% url 'documents:document_list' %}" class="section-link">Все документы →</a>
+            </div>
+        </div>
+
+        {% for doc in recent_documents %}
+        <div class="col-md-6 col-lg-4 mb-4">
+            <div class="doc-card">
+                <div class="doc-card-header">
+                    <span class="doc-genre-badge">{{ doc.get_genre_display|default:"Документ" }}</span>
+                    <span class="doc-date">{{ doc.created_at|default:"—" }}</span>
+                </div>
+                <div class="doc-card-body">
+                    <h5 class="doc-title">
+                        <a href="{% url 'documents:document_detail' doc.pk %}">{{ doc.title|truncatechars:80 }}</a>
+                    </h5>
+                    <p class="doc-excerpt">{{ doc.full_text|truncatewords:20|default:"Текст не добавлен" }}</p>
+                </div>
+                <div class="doc-card-footer">
+                    {% if doc.place_created %}<span class="doc-meta">📍 {{ doc.place_created }}</span>{% endif %}
+                    {% if doc.original_language %}<span class="doc-meta">🌐 {{ doc.get_original_language_display }}</span>{% endif %}
+                    <a href="{% url 'documents:document_detail' doc.pk %}" class="doc-read-btn">Читать</a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="empty-state">
+                <div class="empty-icon">📭</div>
+                <h4>Архив пуст</h4>
+                <p>Документы ещё не добавлены.</p>
+                {% if user.is_authenticated %}
+                <a href="{% url 'documents:document_create' %}" class="btn-official">Добавить первый документ</a>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- GENRE CARDS -->
+    <div class="row mb-5">
+        <div class="col-12 mb-3">
+            <div class="section-header">
+                <h2 class="section-title">📚 Разделы архива</h2>
+            </div>
+        </div>
+        {% for genre_value, genre_name, count in genre_stats %}
+        <div class="col-6 col-md-4 col-lg-3 mb-3">
+            <a href="{% url 'documents:document_list' %}?genre={{ genre_value }}" class="genre-card">
+                <div class="genre-name">{{ genre_name }}</div>
+                <div class="genre-count">{{ count }} док.</div>
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- BOTTOM CTA -->
+    {% if user.is_authenticated %}
+    <div class="cta-bar">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h4 class="cta-title">Пополните архив</h4>
+                <p class="cta-text">Добавьте новый документ в систему для сохранения и каталогизации.</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'documents:document_create' %}" class="btn-official">➕ Добавить документ</a>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+</div>
+
+<style>
+/* HERO */
+.hero-section {
+    background: linear-gradient(135deg, #1a2744 0%, #2c3e6b 50%, #1a3a5c 100%);
+    position: relative;
+}
+.hero-overlay {
+    background: repeating-linear-gradient(
+        45deg,
+        transparent,
+        transparent 40px,
+        rgba(255,255,255,0.015) 40px,
+        rgba(255,255,255,0.015) 80px
+    );
+}
+.badge-official {
+    background: rgba(255,255,255,0.15);
+    color: #c8d8f0;
+    border: 1px solid rgba(255,255,255,0.25);
+    padding: 5px 16px;
+    border-radius: 2px;
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    font-weight: 600;
+}
+.hero-title {
+    color: #ffffff;
+    font-size: 2.2rem;
+    font-weight: 700;
+    line-height: 1.3;
+    margin: 16px 0 12px;
+}
+.hero-subtitle {
+    color: #a8c0dc;
+    font-size: 1rem;
+    line-height: 1.6;
+}
+.search-bar-wrapper {
+    display: flex;
+    max-width: 640px;
+    margin: 0 auto;
+    border: 2px solid rgba(255,255,255,0.3);
+    border-radius: 4px;
+    overflow: hidden;
+    background: rgba(255,255,255,0.07);
+}
+.search-input {
+    flex: 1;
+    padding: 13px 18px;
+    background: transparent;
+    border: none;
+    color: #fff;
+    font-size: 0.95rem;
+    outline: none;
+}
+.search-input::placeholder { color: rgba(255,255,255,0.5); }
+.search-btn {
+    padding: 13px 24px;
+    background: #c5973a;
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+.search-btn:hover { background: #b5872a; }
+.quick-filters { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.quick-tag {
+    padding: 5px 14px;
+    background: rgba(255,255,255,0.1);
+    color: #c8d8f0;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    font-size: 0.8rem;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.quick-tag:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* STATS BAR */
+.stats-bar {
+    background: #1e2d4a;
+    border-top: 3px solid #c5973a;
+    padding: 24px 0;
+}
+.stat-item { padding: 8px; }
+.stat-number { font-size: 2rem; font-weight: 700; color: #c5973a; line-height: 1; }
+.stat-label { font-size: 0.78rem; color: #8899bb; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+
+/* SECTION HEADERS */
+.section-header { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 20px; border-bottom: 2px solid #e8ecf0; padding-bottom: 10px; }
+.section-title { font-size: 1.3rem; font-weight: 700; color: #1a2744; margin: 0; }
+.section-link { font-size: 0.88rem; color: #2c5282; text-decoration: none; font-weight: 500; }
+.section-link:hover { color: #c5973a; }
+
+/* DOC CARDS */
+.doc-card {
+    background: #fff;
+    border: 1px solid #dde3ec;
+    border-top: 3px solid #2c3e6b;
+    border-radius: 3px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    transition: box-shadow 0.2s, transform 0.2s;
+}
+.doc-card:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: translateY(-2px); }
+.doc-card-header { padding: 12px 16px 0; display: flex; justify-content: space-between; align-items: center; }
+.doc-genre-badge { font-size: 0.72rem; background: #eef2f9; color: #2c3e6b; padding: 3px 10px; border-radius: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.doc-date { font-size: 0.78rem; color: #8899bb; }
+.doc-card-body { padding: 12px 16px; flex: 1; }
+.doc-title a { color: #1a2744; text-decoration: none; font-weight: 600; font-size: 0.95rem; line-height: 1.4; }
+.doc-title a:hover { color: #c5973a; }
+.doc-excerpt { font-size: 0.82rem; color: #6677aa; margin-top: 6px; line-height: 1.5; }
+.doc-card-footer { padding: 10px 16px 14px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; border-top: 1px solid #eef0f5; }
+.doc-meta { font-size: 0.75rem; color: #8899bb; }
+.doc-read-btn { margin-left: auto; font-size: 0.8rem; background: #2c3e6b; color: #fff; padding: 4px 14px; border-radius: 2px; text-decoration: none; font-weight: 500; }
+.doc-read-btn:hover { background: #c5973a; color: #fff; }
+
+/* GENRE CARDS */
+.genre-card {
+    display: block;
+    background: #fff;
+    border: 1px solid #dde3ec;
+    border-left: 4px solid #2c3e6b;
+    padding: 14px 16px;
+    border-radius: 2px;
+    text-decoration: none;
+    transition: all 0.2s;
+}
+.genre-card:hover { border-left-color: #c5973a; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+.genre-name { font-size: 0.88rem; font-weight: 600; color: #1a2744; }
+.genre-count { font-size: 0.78rem; color: #8899bb; margin-top: 3px; }
+
+/* CTA */
+.cta-bar { background: #1a2744; border-left: 5px solid #c5973a; padding: 28px 32px; border-radius: 3px; }
+.cta-title { color: #fff; font-weight: 700; margin: 0 0 6px; }
+.cta-text { color: #8899bb; margin: 0; font-size: 0.9rem; }
+.btn-official { display: inline-block; background: #c5973a; color: #fff; padding: 10px 24px; border-radius: 2px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s; }
+.btn-official:hover { background: #b5872a; color: #fff; }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 48px; background: #f8f9fc; border: 1px dashed #ccd3e0; border-radius: 4px; }
+.empty-icon { font-size: 3rem; margin-bottom: 12px; }
+</style>
+{% endblock %}

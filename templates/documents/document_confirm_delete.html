@@ -3,26 +3,40 @@
 {% block title %}Удаление документа{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-md-6 offset-md-3">
-        <div class="card">
-            <div class="card-header bg-danger text-white">
-                <h3>⚠️ Подтверждение удаления</h3>
-            </div>
-            <div class="card-body">
-                <p>Вы действительно хотите удалить документ:</p>
-                <h4>"{{ object.title }}"</h4>
-                <p class="text-danger">Это действие необратимо!</p>
-                
-                <form method="post">
-                    {% csrf_token %}
-                    <div class="btn-group">
-                        <button type="submit" class="btn btn-danger">Да, удалить</button>
-                        <a href="{% url 'documents:document_detail' object.pk %}" class="btn btn-secondary">Отмена</a>
-                    </div>
-                </form>
-            </div>
+<div class="col-12">
+<style>
+.delete-wrapper { max-width: 560px; margin: 60px auto; padding: 0 20px; }
+.delete-card { background: #fff; border: 1px solid #dde3ec; border-top: 4px solid #c0392b; border-radius: 3px; overflow: hidden; }
+.delete-card-header { background: #fdf2f2; padding: 24px 32px; border-bottom: 1px solid #f0c0bb; }
+.delete-card-title { color: #c0392b; font-size: 1.2rem; font-weight: 700; margin: 0; }
+.delete-card-body { padding: 28px 32px; }
+.delete-doc-name { background: #f8f9fc; border: 1px solid #dde3ec; border-left: 4px solid #c0392b; border-radius: 2px; padding: 14px 18px; font-size: 0.95rem; font-weight: 600; color: #1a2744; margin: 12px 0 20px; }
+.delete-warning { font-size: 0.85rem; color: #c0392b; background: #fdf2f2; border: 1px solid #f0c0bb; border-radius: 2px; padding: 10px 14px; margin-bottom: 24px; }
+.delete-actions { display: flex; gap: 12px; }
+.btn-confirm-delete { background: #c0392b; color: #fff; border: none; padding: 11px 28px; font-size: 0.9rem; font-weight: 600; border-radius: 2px; cursor: pointer; transition: background 0.2s; }
+.btn-confirm-delete:hover { background: #a93226; }
+.btn-cancel-delete { background: transparent; color: #6677aa; border: 1px solid #ccd3e0; padding: 11px 24px; font-size: 0.9rem; font-weight: 500; border-radius: 2px; text-decoration: none; transition: all 0.2s; }
+.btn-cancel-delete:hover { border-color: #2c3e6b; color: #2c3e6b; }
+</style>
+
+<div class="delete-wrapper">
+    <div class="delete-card">
+        <div class="delete-card-header">
+            <h2 class="delete-card-title">⚠️ Подтверждение удаления</h2>
+        </div>
+        <div class="delete-card-body">
+            <p style="color:#3a4a6b;font-size:0.9rem;">Вы собираетесь удалить документ:</p>
+            <div class="delete-doc-name">{{ object.title }}</div>
+            <div class="delete-warning">⚠️ Это действие необратимо. Документ будет удалён из архива навсегда.</div>
+            <form method="post">
+                {% csrf_token %}
+                <div class="delete-actions">
+                    <button type="submit" class="btn-confirm-delete">Да, удалить</button>
+                    <a href="{% url 'documents:document_detail' object.pk %}" class="btn-cancel-delete">Отмена</a>
+                </div>
+            </form>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}

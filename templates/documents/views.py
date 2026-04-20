@@ -1,14 +1,11 @@
-﻿from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView, TemplateView
 from django.urls import reverse_lazy
 from django.db.models import Q, Count
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
 from .models import Document
 from .forms import DocumentForm
-import os
-import tempfile
-from django.views import View
-from django.http import FileResponse, HttpResponse
-from django.shortcuts import render
 
 
 class HomeView(TemplateView):
@@ -21,60 +18,82 @@ class HomeView(TemplateView):
         context['total_genres'] = Document.objects.exclude(genre__isnull=True).exclude(genre='').values('genre').distinct().count()
         context['total_languages'] = Document.objects.exclude(original_language__isnull=True).exclude(original_language='').values('original_language').distinct().count()
         context['docs_with_files'] = Document.objects.exclude(original_file='').exclude(original_file__isnull=True).count()
+
         genre_counts = Document.objects.exclude(genre__isnull=True).exclude(genre='').values('genre').annotate(count=Count('id'))
         genre_dict = {g: n for g, n in Document.GENRE_CHOICES}
         context['genre_stats'] = [(g['genre'], genre_dict.get(g['genre'], g['genre']), g['count']) for g in genre_counts]
+
         return context
 
-
+# Эти страницы доступны всем (чтение)
 class DocumentListView(ListView):
     model = Document
     template_name = 'documents/document_list.html'
     context_object_name = 'documents'
     paginate_by = 10
-
+    
     def get_queryset(self):
         queryset = super().get_queryset()
+        
         search_query = self.request.GET.get('q')
         genre_filter = self.request.GET.get('genre')
         language_filter = self.request.GET.get('language')
         year_filter = self.request.GET.get('year')
+        
         if search_query:
-            queryset = queryset.filter(Q(title__icontains=search_query) | Q(full_text__icontains=search_query) | Q(place_created__icontains=search_query))
+            queryset = queryset.filter(
+                Q(title__icontains=search_query) |
+                Q(full_text__icontains=search_query) |
+                Q(place_created__icontains=search_query)
+            )
+        
         if genre_filter:
             queryset = queryset.filter(genre=genre_filter)
+        
         if language_filter:
             queryset = queryset.filter(original_language=language_filter)
+        
         if year_filter:
             queryset = queryset.filter(created_at__year=year_filter)
+        
         return queryset
-
+    
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
+        
         from datetime import datetime
+        current_year = datetime.now().year
+        
         context['genres'] = Document.GENRE_CHOICES
         lang_values = Document.objects.values_list('original_language', flat=True).distinct()
         lang_dict = dict(Document.LANGUAGE_CHOICES)
         context['languages'] = [(lang, lang_dict.get(lang, lang)) for lang in lang_values if lang]
-        context['years'] = range(2000, datetime.now().year + 1)
-        context['current_filters'] = {'q': self.request.GET.get('q', ''), 'genre': self.request.GET.get('genre', ''), 'language': self.request.GET.get('language', ''), 'year': self.request.GET.get('year', '')}
+        context['years'] = range(2000, current_year + 1)
+        
+        context['current_filters'] = {
+            'q': self.request.GET.get('q', ''),
+            'genre': self.request.GET.get('genre', ''),
+            'language': self.request.GET.get('language', ''),
+            'year': self.request.GET.get('year', ''),
+        }
+        
         return context
 
-
+# Чтение документа - доступно всем
 class DocumentDetailView(DetailView):
     model = Document
     template_name = 'documents/document_detail.html'
     context_object_name = 'document'
 
-
+# СОЗДАНИЕ документа - только авторизованным пользователям
 class DocumentCreateView(LoginRequiredMixin, CreateView):
     model = Document
     form_class = DocumentForm
     template_name = 'documents/document_form.html'
     success_url = reverse_lazy('documents:document_list')
-    login_url = '/accounts/login/'
+    login_url = '/accounts/login/'  # Перенаправление на страницу входа
 
-
+# РЕДАКТИРОВАНИЕ - только авторизованным
 class DocumentUpdateView(LoginRequiredMixin, UpdateView):
     model = Document
     form_class = DocumentForm
@@ -82,58 +101,9 @@ class DocumentUpdateView(LoginRequiredMixin, UpdateView):
     success_url = reverse_lazy('documents:document_list')
     login_url = '/accounts/login/'
 
-
+# УДАЛЕНИЕ - только авторизованным
 class DocumentDeleteView(LoginRequiredMixin, DeleteView):
     model = Document
     template_name = 'documents/document_confirm_delete.html'
     success_url = reverse_lazy('documents:document_list')
     login_url = '/accounts/login/'
-
-
-class ConvertView(View):
-    template_name = 'documents/convert.html'
-
-    def get(self, request):
-        return render(request, self.template_name)
-
-    def post(self, request):
-        uploaded_file = request.FILES.get('file')
-        conversion_type = request.POST.get('conversion_type')
-
-        if not uploaded_file:
-            return render(request, self.template_name, {'error': 'Файл не выбран.'})
-
-        try:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                input_path = os.path.join(tmpdir, uploaded_file.name)
-                with open(input_path, 'wb') as f:
-                    for chunk in uploaded_file.chunks():
-                        f.write(chunk)
-
-                if conversion_type == 'pdf_to_word':
-                    from pdf2docx import Converter
-                    output_name = os.path.splitext(uploaded_file.name)[0] + '.docx'
-                    output_path = os.path.join(tmpdir, output_name)
-                    cv = Converter(input_path)
-                    cv.convert(output_path)
-                    cv.close()
-                    content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-
-                elif conversion_type == 'word_to_pdf':
-                    from docx2pdf import convert
-                    output_name = os.path.splitext(uploaded_file.name)[0] + '.pdf'
-                    output_path = os.path.join(tmpdir, output_name)
-                    convert(input_path, output_path)
-                    content_type = 'application/pdf'
-                else:
-                    return render(request, self.template_name, {'error': 'Неверный тип конвертации.'})
-
-                with open(output_path, 'rb') as f:
-                    file_data = f.read()
-
-            response = HttpResponse(file_data, content_type=content_type)
-            response['Content-Disposition'] = f'attachment; filename="{output_name}"'
-            return response
-
-        except Exception as e:
-            return render(request, self.template_name, {'error': f'Ошибка конвертации: {str(e)}'})

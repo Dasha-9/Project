@@ -4,104 +4,137 @@
 {% block title %}{{ document.title }}{% endblock %}
 
 {% block content %}
-<div class="col-md-12">
-    <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-            <li class="breadcrumb-item"><a href="{% url 'documents:document_list' %}">Главная</a></li>
-            <li class="breadcrumb-item active">{{ document.title }}</li>
-        </ol>
-    </nav>
-    
-    <div class="card">
-        <div class="card-header bg-primary text-white">
-            <h2>{{ document.title }}</h2>
+<div class="col-12">
+<style>
+.detail-header { background: linear-gradient(135deg, #1a2744 0%, #2c3e6b 100%); padding: 32px 40px; border-bottom: 4px solid #c5973a; }
+.detail-breadcrumb { font-size: 0.78rem; color: #6677aa; margin-bottom: 12px; }
+.detail-breadcrumb a { color: #a8c0dc; text-decoration: none; }
+.detail-breadcrumb a:hover { color: #c5973a; }
+.detail-title { color: #fff; font-size: 1.6rem; font-weight: 700; line-height: 1.3; margin: 0 0 12px; }
+.detail-genre-pill { font-size: 0.72rem; background: rgba(197,151,58,0.2); color: #c5973a; border: 1px solid rgba(197,151,58,0.4); padding: 4px 14px; border-radius: 2px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+.detail-body { padding: 32px 40px; }
+.meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; margin-bottom: 28px; }
+.meta-card { background: #fff; border: 1px solid #dde3ec; border-radius: 2px; padding: 14px 16px; }
+.meta-card-label { font-size: 0.7rem; font-weight: 700; color: #8899bb; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.meta-card-value { font-size: 0.9rem; color: #1a2744; font-weight: 500; }
+.detail-section { background: #fff; border: 1px solid #dde3ec; border-left: 4px solid #2c3e6b; border-radius: 2px; padding: 20px 24px; margin-bottom: 16px; }
+.detail-section-title { font-size: 0.82rem; font-weight: 700; color: #3a4a6b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 12px; }
+.detail-text { font-size: 0.9rem; color: #3a4a6b; line-height: 1.7; }
+.full-text-box { background: #f8f9fc; border: 1px solid #dde3ec; border-radius: 2px; padding: 24px; max-height: 500px; overflow-y: auto; white-space: pre-wrap; font-size: 0.88rem; color: #2a3a5a; line-height: 1.8; font-family: Georgia, serif; }
+.file-download-btn { display: inline-flex; align-items: center; gap: 10px; background: #2c3e6b; color: #fff; padding: 12px 24px; border-radius: 2px; text-decoration: none; font-weight: 600; font-size: 0.9rem; transition: background 0.2s; }
+.file-download-btn:hover { background: #c5973a; color: #fff; }
+.file-size { font-size: 0.78rem; color: #8899bb; margin-top: 6px; }
+.tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+.tag-item { background: #eef2f9; color: #2c3e6b; padding: 4px 12px; border-radius: 2px; font-size: 0.78rem; font-weight: 500; }
+.action-bar { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 28px; padding-top: 20px; border-top: 1px solid #dde3ec; }
+.btn-action { font-size: 0.85rem; padding: 9px 20px; border-radius: 2px; text-decoration: none; font-weight: 500; transition: all 0.2s; }
+.btn-back { background: transparent; color: #6677aa; border: 1px solid #ccd3e0; }
+.btn-back:hover { border-color: #2c3e6b; color: #2c3e6b; }
+.btn-edit-doc { background: #2c3e6b; color: #fff; border: 1px solid #2c3e6b; }
+.btn-edit-doc:hover { background: #c5973a; border-color: #c5973a; color: #fff; }
+.btn-delete-doc { background: transparent; color: #c0392b; border: 1px solid #f0c0bb; }
+.btn-delete-doc:hover { background: #c0392b; color: #fff; border-color: #c0392b; }
+.translation-yes { color: #2d6a2d; font-weight: 500; }
+.translation-no { color: #8899bb; }
+</style>
+
+<div class="detail-header">
+    <div class="detail-breadcrumb">
+        <a href="/">Главная</a> &rsaquo; <a href="{% url 'documents:document_list' %}">Документы</a> &rsaquo; {{ document.title|truncatechars:50 }}
+    </div>
+    <h1 class="detail-title">{{ document.title }}</h1>
+    <div class="d-flex gap-2 flex-wrap">
+        {% if document.genre %}<span class="detail-genre-pill">{{ document.get_genre_display }}</span>{% endif %}
+        {% if document.discourse_type %}<span class="detail-genre-pill">{{ document.get_discourse_type_display }}</span>{% endif %}
+    </div>
+</div>
+
+<div class="detail-body">
+
+    <!-- META GRID -->
+    <div class="meta-grid">
+        <div class="meta-card">
+            <div class="meta-card-label">📅 Дата создания</div>
+            <div class="meta-card-value">{{ document.created_at|default:"Не указана" }}</div>
         </div>
-        <div class="card-body">
-            <!-- Основная информация -->
-            <div class="row mb-4">
-                <div class="col-md-6">
-                    <p><strong>📅 Дата создания:</strong> {{ document.created_at|default:"Не указана" }}</p>
-                    <p><strong>🎯 Событие:</strong> {{ document.event_context|default:"Не указано" }}</p>
-                    <p><strong>📍 Место создания:</strong> {{ document.place_created|default:"Не указано" }}</p>
-                    <p><strong>📚 Жанр:</strong> {{ document.get_genre_display|default:"Не указан" }}</p>
-                </div>
-                <div class="col-md-6">
-                    <p><strong>🌐 Язык оригинала:</strong> {{ document.get_original_language_display|default:"Не указан" }}</p>
-                    <p><strong>🏷️ Дискурсивный тип:</strong> {{ document.get_discourse_type_display|default:"Не указан" }}</p>
-                    <p><strong>📅 Загружено:</strong> {{ document.uploaded_at|date:"d.m.Y H:i" }}</p>
-                </div>
-            </div>
-            
-            <!-- Субъекты -->
-            {% if document.subjects %}
-            <div class="mb-3">
-                <h5>👥 Субъекты (участники, акторы):</h5>
-                <div class="border p-2 bg-light rounded">
-                    {{ document.subjects|linebreaks }}
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Ключевые темы -->
-            {% if document.key_themes %}
-            <div class="mb-3">
-                <h5>🏷️ Ключевые темы:</h5>
-                <div class="border p-2 bg-light rounded">
-                    {{ document.key_themes }}
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Переводы -->
-            <div class="mb-3">
-                <h5>🔄 Переводы:</h5>
-                <p>
-                    {% if document.has_translations %}
-                    ✅ Имеются переводы на: {{ document.translation_languages|default:"не указаны" }}
-                    {% else %}
-                    ❌ Переводы отсутствуют
-                    {% endif %}
-                </p>
-            </div>
-            
-            <!-- Связанные документы -->
-            {% if document.related_documents %}
-            <div class="mb-3">
-                <h5>🔗 Связанные документы:</h5>
-                <div class="border p-2 bg-light rounded">
-                    {{ document.related_documents|linebreaks }}
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Полный текст -->
-            {% if document.full_text %}
-            <div class="mb-4">
-                <h5>📄 Полный текст документа:</h5>
-                <div class="border p-3 bg-white" style="max-height: 500px; overflow-y: auto; white-space: pre-wrap;">
-                    {{ document.full_text|linebreaks }}
-                </div>
-            </div>
-            {% endif %}
-            
-            <!-- Оригинальный файл -->
-            {% if document.original_file %}
-            <div class="mb-3">
-                <h5>📎 Оригинальный документ:</h5>
-                <a href="{{ document.original_file.url }}" class="btn btn-success" target="_blank">
-                    📄 Скачать / Просмотреть оригинал
-                </a>
-                <small class="text-muted ms-2">({{ document.original_file.size|filesizeformat }})</small>
-            </div>
-            {% endif %}
-            
-            <hr>
-            <div class="btn-group">
-                <a href="{% url 'documents:document_update' document.pk %}" class="btn btn-warning">✏️ Редактировать</a>
-                <a href="{% url 'documents:document_delete' document.pk %}" class="btn btn-danger">🗑️ Удалить</a>
-                <a href="{% url 'documents:document_list' %}" class="btn btn-secondary">← Назад к списку</a>
+        <div class="meta-card">
+            <div class="meta-card-label">📍 Место создания</div>
+            <div class="meta-card-value">{{ document.place_created|default:"Не указано" }}</div>
+        </div>
+        <div class="meta-card">
+            <div class="meta-card-label">🌐 Язык оригинала</div>
+            <div class="meta-card-value">{{ document.get_original_language_display|default:"Не указан" }}</div>
+        </div>
+        <div class="meta-card">
+            <div class="meta-card-label">🎯 Событие</div>
+            <div class="meta-card-value">{{ document.event_context|default:"Не указано" }}</div>
+        </div>
+        <div class="meta-card">
+            <div class="meta-card-label">📅 Загружено</div>
+            <div class="meta-card-value">{{ document.uploaded_at|date:"d.m.Y H:i" }}</div>
+        </div>
+        <div class="meta-card">
+            <div class="meta-card-label">🔄 Переводы</div>
+            <div class="meta-card-value">
+                {% if document.has_translations %}
+                <span class="translation-yes">✅ Есть: {{ document.translation_languages|default:"не указаны" }}</span>
+                {% else %}
+                <span class="translation-no">Отсутствуют</span>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {% if document.subjects %}
+    <div class="detail-section">
+        <div class="detail-section-title">👥 Субъекты (участники, акторы)</div>
+        <div class="detail-text">{{ document.subjects|linebreaks }}</div>
+    </div>
+    {% endif %}
+
+    {% if document.key_themes %}
+    <div class="detail-section">
+        <div class="detail-section-title">🏷️ Ключевые темы</div>
+        <div class="tag-list">
+            {% for tag in document.key_themes.split %}
+            <span class="tag-item">{{ tag }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if document.related_documents %}
+    <div class="detail-section">
+        <div class="detail-section-title">🔗 Связанные документы</div>
+        <div class="detail-text">{{ document.related_documents|linebreaks }}</div>
+    </div>
+    {% endif %}
+
+    {% if document.original_file %}
+    <div class="detail-section" style="border-left-color:#c5973a;">
+        <div class="detail-section-title">📎 Оригинальный файл</div>
+        <a href="{{ document.original_file.url }}" class="file-download-btn" target="_blank">
+            📄 Скачать / Просмотреть оригинал
+        </a>
+        <div class="file-size">{{ document.original_file.size|filesizeformat }}</div>
+    </div>
+    {% endif %}
+
+    {% if document.full_text %}
+    <div class="detail-section">
+        <div class="detail-section-title">📄 Полный текст документа</div>
+        <div class="full-text-box">{{ document.full_text }}</div>
+    </div>
+    {% endif %}
+
+    <div class="action-bar">
+        <a href="{% url 'documents:document_list' %}" class="btn-action btn-back">← Назад к списку</a>
+        {% if user.is_authenticated %}
+        <a href="{% url 'documents:document_update' document.pk %}" class="btn-action btn-edit-doc">✏️ Редактировать</a>
+        <a href="{% url 'documents:document_delete' document.pk %}" class="btn-action btn-delete-doc">🗑️ Удалить</a>
+        {% endif %}
+    </div>
+
+</div>
 </div>
 {% endblock %}

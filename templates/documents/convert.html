@@ -1,0 +1,116 @@
+{% extends 'base.html' %}
+
+{% block title %}Конвертация документов{% endblock %}
+
+{% block content %}
+<div class="col-12">
+<style>
+.convert-header { background: linear-gradient(135deg, #1a2744 0%, #2c3e6b 100%); padding: 32px 40px; border-bottom: 4px solid #c5973a; }
+.convert-title { color: #fff; font-size: 1.5rem; font-weight: 700; margin: 0 0 6px; }
+.convert-sub { color: #a8c0dc; font-size: 0.9rem; margin: 0; }
+.convert-body { padding: 40px; max-width: 700px; }
+.convert-card { background: #fff; border: 1px solid #dde3ec; border-top: 3px solid #2c3e6b; border-radius: 3px; padding: 32px; margin-bottom: 24px; }
+.convert-options { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+.convert-option { border: 2px solid #dde3ec; border-radius: 3px; padding: 20px; cursor: pointer; transition: all 0.2s; text-align: center; position: relative; }
+.convert-option:hover { border-color: #2c3e6b; }
+.convert-option input[type=radio] { position: absolute; opacity: 0; }
+.convert-option.selected { border-color: #2c3e6b; background: #f0f4fb; }
+.convert-option-icon { font-size: 2.2rem; margin-bottom: 8px; }
+.convert-option-title { font-size: 0.9rem; font-weight: 700; color: #1a2744; margin-bottom: 4px; }
+.convert-option-desc { font-size: 0.75rem; color: #8899bb; }
+.arrow { font-size: 1.2rem; color: #c5973a; margin: 4px 0; }
+.field-label { font-size: 0.78rem; font-weight: 700; color: #3a4a6b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px; display: block; }
+.file-upload-area { border: 2px dashed #ccd3e0; border-radius: 3px; padding: 32px; text-align: center; background: #f8f9fc; transition: border-color 0.2s; cursor: pointer; }
+.file-upload-area:hover { border-color: #2c3e6b; }
+.file-upload-icon { font-size: 2.5rem; margin-bottom: 10px; }
+.file-upload-text { font-size: 0.85rem; color: #6677aa; margin-bottom: 8px; }
+.file-input { display: none; }
+.file-chosen { font-size: 0.82rem; color: #2c3e6b; font-weight: 600; margin-top: 8px; }
+.btn-convert { background: #2c3e6b; color: #fff; border: none; padding: 13px 36px; font-size: 0.95rem; font-weight: 600; border-radius: 2px; cursor: pointer; transition: background 0.2s; width: 100%; margin-top: 20px; }
+.btn-convert:hover { background: #c5973a; }
+.error-box { background: #fdf2f2; border: 1px solid #f0c0bb; border-radius: 2px; padding: 14px 18px; color: #c0392b; font-size: 0.88rem; margin-bottom: 20px; }
+.info-box { background: #f0f4fb; border: 1px solid #c8d8f0; border-radius: 2px; padding: 14px 18px; color: #2c3e6b; font-size: 0.82rem; }
+</style>
+
+<div class="convert-header">
+    <h1 class="convert-title">🔄 Конвертация документов</h1>
+    <p class="convert-sub">Конвертируйте PDF в Word или Word в PDF прямо на сайте</p>
+</div>
+
+<div class="convert-body">
+
+    {% if error %}
+    <div class="error-box">⚠️ {{ error }}</div>
+    {% endif %}
+
+    <div class="convert-card">
+        <form method="post" enctype="multipart/form-data" id="convertForm">
+            {% csrf_token %}
+
+            <!-- CONVERSION TYPE -->
+            <label class="field-label">Тип конвертации</label>
+            <div class="convert-options">
+                <label class="convert-option selected" id="opt-pdf" onclick="selectOption('pdf_to_word')">
+                    <input type="radio" name="conversion_type" value="pdf_to_word" checked>
+                    <div class="convert-option-icon">📄</div>
+                    <div class="arrow">↓</div>
+                    <div class="convert-option-icon">📝</div>
+                    <div class="convert-option-title">PDF → Word</div>
+                    <div class="convert-option-desc">Конвертировать PDF в редактируемый DOCX</div>
+                </label>
+                <label class="convert-option" id="opt-word" onclick="selectOption('word_to_pdf')">
+                    <input type="radio" name="conversion_type" value="word_to_pdf">
+                    <div class="convert-option-icon">📝</div>
+                    <div class="arrow">↓</div>
+                    <div class="convert-option-icon">📄</div>
+                    <div class="convert-option-title">Word → PDF</div>
+                    <div class="convert-option-desc">Конвертировать DOCX/DOC в PDF</div>
+                </label>
+            </div>
+
+            <!-- FILE UPLOAD -->
+            <label class="field-label">Загрузите файл</label>
+            <div class="file-upload-area" onclick="document.getElementById('fileInput').click()">
+                <div class="file-upload-icon">📁</div>
+                <div class="file-upload-text">Нажмите для выбора файла</div>
+                <div class="file-upload-text" id="accept-hint">Поддерживается: PDF</div>
+                <div class="file-chosen" id="file-name">Файл не выбран</div>
+                <input type="file" name="file" id="fileInput" class="file-input" accept=".pdf" onchange="showFileName(this)">
+            </div>
+
+            <div class="info-box mt-3">
+                💡 После нажатия кнопки файл будет автоматически сконвертирован и скачан на ваш компьютер.
+            </div>
+
+            <button type="submit" class="btn-convert">🔄 Конвертировать и скачать</button>
+        </form>
+    </div>
+</div>
+</div>
+
+<script>
+function selectOption(type) {
+    document.getElementById('opt-pdf').classList.remove('selected');
+    document.getElementById('opt-word').classList.remove('selected');
+    const fileInput = document.getElementById('fileInput');
+    const hint = document.getElementById('accept-hint');
+
+    if (type === 'pdf_to_word') {
+        document.getElementById('opt-pdf').classList.add('selected');
+        fileInput.accept = '.pdf';
+        hint.textContent = 'Поддерживается: PDF';
+    } else {
+        document.getElementById('opt-word').classList.add('selected');
+        fileInput.accept = '.doc,.docx';
+        hint.textContent = 'Поддерживается: DOC, DOCX';
+    }
+    fileInput.value = '';
+    document.getElementById('file-name').textContent = 'Файл не выбран';
+}
+
+function showFileName(input) {
+    const name = input.files[0] ? input.files[0].name : 'Файл не выбран';
+    document.getElementById('file-name').textContent = name;
+}
+</script>
+{% endblock %}

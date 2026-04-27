@@ -1,7 +1,0 @@
-DB_NAME=db_fDoc
-DB_USER=postgres
-DB_PASSWORD=Bombastik
-DB_HOST=localhost
-DB_PORT=5432
-SECRET_KEY=django-insecure-key-for-dev
-DEBUG=True

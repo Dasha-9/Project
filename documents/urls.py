@@ -10,5 +10,4 @@ urlpatterns = [
     path('document/create/', views.DocumentCreateView.as_view(), name='document_create'),
     path('document/<int:pk>/edit/', views.DocumentUpdateView.as_view(), name='document_update'),
     path('document/<int:pk>/delete/', views.DocumentDeleteView.as_view(), name='document_delete'),
-    path('convert/', views.ConvertView.as_view(), name='convert'),
 ]

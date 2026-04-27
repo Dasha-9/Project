@@ -1,5 +1,13 @@
+import os
 from django import forms
 from .models import Document
+
+ALLOWED_EXTENSIONS = ['.pdf', '.doc', '.docx', '.txt']
+
+def validate_file_extension(file):
+    ext = os.path.splitext(file.name)[1].lower()
+    if ext not in ALLOWED_EXTENSIONS:
+        raise forms.ValidationError(f'Недопустимый формат файла. Разрешены: PDF, DOC, DOCX, TXT.')
 
 class DocumentForm(forms.ModelForm):
     class Meta:
@@ -16,15 +24,30 @@ class DocumentForm(forms.ModelForm):
             'key_themes': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'многополярность, регионализация... (необязательно)'}),
             'original_language': forms.Select(attrs={'class': 'form-control'}),
             'discourse_type': forms.Select(attrs={'class': 'form-control'}),
-            'related_documents': forms.Textarea(attrs={'rows': 3, 'class': 'form-control', 'placeholder': 'Ссылки на связанные документы (необязательно)'}),
+            'institution': forms.Select(attrs={'class': 'form-control'}),
+            'related_documents': forms.SelectMultiple(attrs={'class': 'form-control', 'size': '6'}),
             'has_translations': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
-            'translation_languages': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'русский, английский, китайский (необязательно)'}),
+            'translation_languages': forms.Select(attrs={'class': 'form-control'}),
+            'translation_file': forms.FileInput(attrs={'class': 'form-control'}),
             'original_file': forms.FileInput(attrs={'class': 'form-control'}),
         }
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # Делаем все поля необязательными, кроме title
         for field_name, field in self.fields.items():
             if field_name != 'title':
                 field.required = False
+        if self.instance.pk:
+            self.fields['related_documents'].queryset = Document.objects.exclude(pk=self.instance.pk)
+
+    def clean_original_file(self):
+        f = self.cleaned_data.get('original_file')
+        if f and hasattr(f, 'name'):
+            validate_file_extension(f)
+        return f
+
+    def clean_translation_file(self):
+        f = self.cleaned_data.get('translation_file')
+        if f and hasattr(f, 'name'):
+            validate_file_extension(f)
+        return f

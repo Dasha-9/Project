@@ -27,7 +27,7 @@
         <div class="delete-card-body">
             <p style="color:#3a4a6b;font-size:0.9rem;">Вы собираетесь удалить документ:</p>
             <div class="delete-doc-name">{{ object.title }}</div>
-            <div class="delete-warning">⚠️ Это действие необратимо. Документ будет удалён из архива навсегда.</div>
+            <div class="delete-warning">⚠️ Это действие необратимо. Документ будет удалён из базы данных навсегда.</div>
             <form method="post">
                 {% csrf_token %}
                 <div class="delete-actions">

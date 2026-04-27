@@ -77,7 +77,7 @@
             <div class="meta-card-label">🔄 Переводы</div>
             <div class="meta-card-value">
                 {% if document.has_translations %}
-                <span class="translation-yes">✅ Есть: {{ document.translation_languages|default:"не указаны" }}</span>
+                <span class="translation-yes">✅ Есть: {{ document.get_translation_languages_display|default:"не указан" }}</span>
                 {% else %}
                 <span class="translation-no">Отсутствуют</span>
                 {% endif %}
@@ -94,7 +94,7 @@
 
     {% if document.key_themes %}
     <div class="detail-section">
-        <div class="detail-section-title">🏷️ Ключевые темы</div>
+        <div class="detail-section-title">🏷️ Ключевые темы (концепты)</div>
         <div class="tag-list">
             {% for tag in document.key_themes.split %}
             <span class="tag-item">{{ tag }}</span>
@@ -103,10 +103,18 @@
     </div>
     {% endif %}
 
-    {% if document.related_documents %}
+    {% if document.related_documents.exists %}
     <div class="detail-section">
         <div class="detail-section-title">🔗 Связанные документы</div>
-        <div class="detail-text">{{ document.related_documents|linebreaks }}</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+            {% for rel in document.related_documents.all %}
+            <a href="{% url 'documents:document_detail' rel.pk %}" style="color:#2c3e6b;text-decoration:none;font-size:0.9rem;display:flex;align-items:center;gap:8px;">
+                <span style="color:#c5973a;">📄</span>
+                <span style="border-bottom:1px solid #ccd3e0;">{{ rel.title }}</span>
+                {% if rel.created_at %}<span style="color:#8899bb;font-size:0.78rem;">{{ rel.created_at }}</span>{% endif %}
+            </a>
+            {% endfor %}
+        </div>
     </div>
     {% endif %}
 

@@ -4,11 +4,6 @@ from django.db.models import Q, Count
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .models import Document
 from .forms import DocumentForm
-import os
-import tempfile
-from django.views import View
-from django.http import FileResponse, HttpResponse
-from django.shortcuts import render
 
 
 class HomeView(TemplateView):
@@ -47,17 +42,19 @@ class DocumentListView(ListView):
             queryset = queryset.filter(original_language=language_filter)
         if year_filter:
             queryset = queryset.filter(created_at__year=year_filter)
+        institution_filter = self.request.GET.get('institution')
+        if institution_filter:
+            queryset = queryset.filter(institution=institution_filter)
         return queryset
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         from datetime import datetime
         context['genres'] = Document.GENRE_CHOICES
-        lang_values = Document.objects.values_list('original_language', flat=True).distinct()
-        lang_dict = dict(Document.LANGUAGE_CHOICES)
-        context['languages'] = [(lang, lang_dict.get(lang, lang)) for lang in lang_values if lang]
+        context['languages'] = Document.LANGUAGE_CHOICES
         context['years'] = range(2000, datetime.now().year + 1)
-        context['current_filters'] = {'q': self.request.GET.get('q', ''), 'genre': self.request.GET.get('genre', ''), 'language': self.request.GET.get('language', ''), 'year': self.request.GET.get('year', '')}
+        context['institutions'] = Document.INSTITUTION_CHOICES
+        context['current_filters'] = {'q': self.request.GET.get('q', ''), 'genre': self.request.GET.get('genre', ''), 'language': self.request.GET.get('language', ''), 'year': self.request.GET.get('year', ''), 'institution': self.request.GET.get('institution', '')}
         return context
 
 
@@ -88,52 +85,3 @@ class DocumentDeleteView(LoginRequiredMixin, DeleteView):
     template_name = 'documents/document_confirm_delete.html'
     success_url = reverse_lazy('documents:document_list')
     login_url = '/accounts/login/'
-
-
-class ConvertView(View):
-    template_name = 'documents/convert.html'
-
-    def get(self, request):
-        return render(request, self.template_name)
-
-    def post(self, request):
-        uploaded_file = request.FILES.get('file')
-        conversion_type = request.POST.get('conversion_type')
-
-        if not uploaded_file:
-            return render(request, self.template_name, {'error': 'Файл не выбран.'})
-
-        try:
-            with tempfile.TemporaryDirectory() as tmpdir:
-                input_path = os.path.join(tmpdir, uploaded_file.name)
-                with open(input_path, 'wb') as f:
-                    for chunk in uploaded_file.chunks():
-                        f.write(chunk)
-
-                if conversion_type == 'pdf_to_word':
-                    from pdf2docx import Converter
-                    output_name = os.path.splitext(uploaded_file.name)[0] + '.docx'
-                    output_path = os.path.join(tmpdir, output_name)
-                    cv = Converter(input_path)
-                    cv.convert(output_path)
-                    cv.close()
-                    content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-
-                elif conversion_type == 'word_to_pdf':
-                    from docx2pdf import convert
-                    output_name = os.path.splitext(uploaded_file.name)[0] + '.pdf'
-                    output_path = os.path.join(tmpdir, output_name)
-                    convert(input_path, output_path)
-                    content_type = 'application/pdf'
-                else:
-                    return render(request, self.template_name, {'error': 'Неверный тип конвертации.'})
-
-                with open(output_path, 'rb') as f:
-                    file_data = f.read()
-
-            response = HttpResponse(file_data, content_type=content_type)
-            response['Content-Disposition'] = f'attachment; filename="{output_name}"'
-            return response
-
-        except Exception as e:
-            return render(request, self.template_name, {'error': f'Ошибка конвертации: {str(e)}'})

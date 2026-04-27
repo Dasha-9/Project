@@ -43,7 +43,7 @@
         {% if form.instance.pk %}✏️ Редактирование документа{% else %}➕ Добавление нового документа{% endif %}
     </h1>
     <p class="form-page-subtitle">
-        {% if form.instance.pk %}Внесите изменения и сохраните документ{% else %}Заполните форму для добавления документа в архив. Обязательно только название.{% endif %}
+        {% if form.instance.pk %}Внесите изменения и сохраните документ{% else %}Заполните форму для добавления документа в базу данных. Обязательно только название.{% endif %}
     </p>
 </div>
 
@@ -70,18 +70,22 @@
             <div class="field-hint">Можно оставить пустым, если загружен файл документа</div>
         </div>
         <div class="row">
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <label class="field-label">{{ form.created_at.label }}</label>
                 {{ form.created_at }}
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <label class="field-label">{{ form.place_created.label }}</label>
                 {{ form.place_created }}
                 <div class="field-hint">Город, страна</div>
             </div>
-            <div class="col-md-4 mb-3">
+            <div class="col-md-3 mb-3">
                 <label class="field-label">{{ form.genre.label }}</label>
                 {{ form.genre }}
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="field-label">{{ form.institution.label }}</label>
+                {{ form.institution }}
             </div>
         </div>
         <div class="mb-3">
@@ -114,6 +118,8 @@
                 <label class="field-label">{{ form.discourse_type.label }}</label>
                 {{ form.discourse_type }}
             </div>
+        </div>
+        <div class="row">
             <div class="col-md-4 mb-3">
                 <label class="field-label">Переводы</label>
                 <div class="checkbox-wrapper">
@@ -122,10 +128,26 @@
                 </div>
             </div>
         </div>
-        <div class="mb-3" id="translation-row">
-            <label class="field-label">{{ form.translation_languages.label }}</label>
-            {{ form.translation_languages }}
-            <div class="field-hint">Например: русский, английский, китайский</div>
+        <div id="translation-row" style="display:none;">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label class="field-label">{{ form.translation_languages.label }}</label>
+                    {{ form.translation_languages }}
+                </div>
+            </div>
+            <div class="mb-3">
+                <label class="field-label">{{ form.translation_file.label }}</label>
+                {% if form.instance.translation_file %}
+                <div class="current-file-badge">📎 {{ form.instance.translation_file.name|truncatechars:50 }}</div>
+                <div class="field-hint mt-1">Загрузите новый файл, чтобы заменить текущий</div>
+                {% endif %}
+                <div class="file-upload-area mt-2">
+                    <div class="file-upload-icon">📁</div>
+                    <div class="file-upload-text">PDF, DOC, DOCX, TXT</div>
+                    <div class="mt-2">{{ form.translation_file }}</div>
+                </div>
+                {% if form.translation_file.errors %}<div class="field-error">{{ form.translation_file.errors }}</div>{% endif %}
+            </div>
         </div>
     </div>
 </div>
@@ -136,7 +158,7 @@
         <div class="mb-4">
             <label class="field-label">{{ form.related_documents.label }}</label>
             {{ form.related_documents }}
-            <div class="field-hint">Ссылки на предшествующие или последующие документы</div>
+            <div class="field-hint">Удерживайте Ctrl (или Cmd на Mac) для выбора нескольких документов</div>
         </div>
         <div class="mb-3">
             <label class="field-label">{{ form.original_file.label }}</label>
@@ -149,6 +171,7 @@
                 <div class="file-upload-text">PDF, DOC, DOCX, TXT</div>
                 <div class="mt-2">{{ form.original_file }}</div>
             </div>
+            {% if form.original_file.errors %}<div class="field-error">{{ form.original_file.errors }}</div>{% endif %}
         </div>
     </div>
 </div>
@@ -169,5 +192,9 @@ const checkbox = document.getElementById('{{ form.has_translations.id_for_label 
 const translationRow = document.getElementById('translation-row');
 function toggleTranslation() { translationRow.style.display = checkbox.checked ? 'block' : 'none'; }
 if (checkbox) { toggleTranslation(); checkbox.addEventListener('change', toggleTranslation); }
+
+const firstError = document.querySelector('.field-error');
+if (firstError) { firstError.scrollIntoView({ behavior: 'smooth', block: 'center' }); }
 </script>
+
 {% endblock %}

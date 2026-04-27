@@ -14,6 +14,12 @@ class Document(models.Model):
         ('official_message', 'Официальное сообщение'),
     ]
     
+    INSTITUTION_CHOICES = [
+        ('sco', 'ШОС'),
+        ('brics', 'БРИКС'),
+        ('eas', 'ЕАС'),
+    ]
+
     # Список политико-дискурсивных типов
     DISCOURSE_TYPE_CHOICES = [
         ('programmatic', 'Программный'),
@@ -72,7 +78,7 @@ class Document(models.Model):
     )
     
     key_themes = models.TextField(
-        verbose_name="Ключевые темы", 
+        verbose_name="Ключевые темы (концепты)",
         blank=True, 
         null=True,
         help_text="Теги через запятую (необязательно)"
@@ -88,18 +94,26 @@ class Document(models.Model):
     )
     
     discourse_type = models.CharField(
-        max_length=20, 
-        choices=DISCOURSE_TYPE_CHOICES, 
-        verbose_name="Политико-дискурсивный тип", 
-        blank=True, 
+        max_length=20,
+        choices=DISCOURSE_TYPE_CHOICES,
+        verbose_name="Политико-дискурсивный тип",
+        blank=True,
         null=True
     )
-    
-    related_documents = models.TextField(
-        verbose_name="Связанные документы", 
-        blank=True, 
+
+    institution = models.CharField(
+        max_length=10,
+        choices=INSTITUTION_CHOICES,
+        verbose_name="Институт",
+        blank=True,
         null=True,
-        help_text="Ссылки на предшествующие или последующие документы (необязательно)"
+    )
+    
+    related_documents = models.ManyToManyField(
+        'self',
+        verbose_name="Связанные документы",
+        blank=True,
+        symmetrical=False,
     )
     
     has_translations = models.BooleanField(
@@ -109,13 +123,20 @@ class Document(models.Model):
     )
     
     translation_languages = models.CharField(
-        max_length=200, 
-        verbose_name="Языки переводов", 
-        blank=True, 
+        max_length=20,
+        choices=LANGUAGE_CHOICES,
+        verbose_name="Язык перевода",
+        blank=True,
         null=True,
-        help_text="Например: русский, английский, китайский (необязательно)"
     )
-    
+
+    translation_file = models.FileField(
+        upload_to='documents/translations/%Y/%m/',
+        verbose_name="Файл перевода (PDF, DOC, TXT)",
+        blank=True,
+        null=True,
+    )
+
     original_file = models.FileField(
         upload_to='documents/%Y/%m/',
         verbose_name="Оригинальный документ (PDF, DOC, TXT)",

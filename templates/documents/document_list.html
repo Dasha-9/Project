@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Документы — Архив{% endblock %}
+{% block title %}Документы — База данных{% endblock %}
 
 {% block content %}
 <div class="col-12">
@@ -46,7 +46,7 @@
 </style>
 
 <div class="list-page-header">
-    <h1 class="list-page-title">📄 Документы архива</h1>
+    <h1 class="list-page-title">📄 Документы из базы данных</h1>
     <p class="list-page-sub">Поиск и фильтрация по всем документам</p>
 </div>
 
@@ -76,6 +76,15 @@
                         <option value="">Все языки</option>
                         {% for lang_value, lang_name in languages %}
                         <option value="{{ lang_value }}" {% if current_filters.language == lang_value %}selected{% endif %}>{{ lang_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="filter-label">Институт</label>
+                    <select name="institution" class="form-select">
+                        <option value="">Все институты</option>
+                        {% for inst_value, inst_name in institutions %}
+                        <option value="{{ inst_value }}" {% if current_filters.institution == inst_value %}selected{% endif %}>{{ inst_name }}</option>
                         {% endfor %}
                     </select>
                 </div>
@@ -113,6 +122,7 @@
                 {% if doc.created_at %}<span class="doc-meta-tag">📅 {{ doc.created_at }}</span>{% endif %}
                 {% if doc.place_created %}<span class="doc-meta-tag">📍 {{ doc.place_created }}</span>{% endif %}
                 {% if doc.original_language %}<span class="doc-meta-tag">🌐 {{ doc.get_original_language_display }}</span>{% endif %}
+                {% if doc.institution %}<span class="doc-genre-pill" style="background:#fff3e0;color:#b36a00;">{{ doc.get_institution_display }}</span>{% endif %}
             </div>
             {% if doc.full_text %}
             <p class="doc-excerpt">{{ doc.full_text|truncatewords:30 }}</p>

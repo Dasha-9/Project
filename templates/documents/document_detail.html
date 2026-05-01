@@ -128,6 +128,16 @@
     </div>
     {% endif %}
 
+    {% if document.translation_file %}
+    <div class="detail-section" style="border-left-color:#2d6a2d;">
+        <div class="detail-section-title">🌐 Файл перевода{% if document.translation_languages %} — {{ document.get_translation_languages_display }}{% endif %}</div>
+        <a href="{{ document.translation_file.url }}" class="file-download-btn" style="background:#2d6a2d;" target="_blank">
+            📄 Скачать / Просмотреть перевод
+        </a>
+        <div class="file-size">{{ document.translation_file.size|filesizeformat }}</div>
+    </div>
+    {% endif %}
+
     {% if document.full_text %}
     <div class="detail-section">
         <div class="detail-section-title">📄 Полный текст документа</div>

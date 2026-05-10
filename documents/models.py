@@ -1,4 +1,5 @@
 from django.db import models
+import os
 
 class Document(models.Model):
     # Список жанров
@@ -161,3 +162,16 @@ class Document(models.Model):
     
     def __str__(self):
         return self.title
+
+    def delete(self, *args, **kwargs):
+        for field_name in ('original_file', 'translation_file'):
+            file_field = getattr(self, field_name)
+            if file_field and file_field.name:
+                dir_path = os.path.dirname(file_field.path)
+                if file_field.storage.exists(file_field.name):
+                    file_field.delete(save=False)
+                try:
+                    os.removedirs(dir_path)
+                except OSError:
+                    pass
+        super().delete(*args, **kwargs)
